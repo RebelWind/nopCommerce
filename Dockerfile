@@ -60,12 +60,22 @@ WORKDIR /app
 COPY --from=build /app/published .
 
 ENV ASPNETCORE_URLS=http://+:80
+
 # OpenTelemetry ortam değişkenleri
+ENV CORECLR_ENABLE_PROFILING="1"
+ENV CORECLR_PROFILER="{918728DD-259F-4A6A-AC2B-B85E1B658318}"
+ENV CORECLR_PROFILER_PATH="/otel-dotnet/linux-musl-x64/OpenTelemetry.AutoInstrumentation.Native.so"
+ENV DOTNET_ADDITIONAL_DEPS="/otel-dotnet/AdditionalDeps"
+ENV DOTNET_SHARED_STORE="/otel-dotnet/store"
+ENV DOTNET_STARTUP_HOOKS="/otel-dotnet/net/OpenTelemetry.AutoInstrumentation.StartupHook.dll"
+ENV OTEL_DOTNET_AUTO_HOME="/otel-dotnet"
 ENV OTEL_TRACES_EXPORTER="otlp"
 ENV OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
 ENV OTEL_SERVICE_NAME="nopcommerce"
 ENV OTEL_RESOURCE_ATTRIBUTES="deployment.environment=staging,service.version=1.0.0"
-ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318/v1/traces"
+ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://otel-collector:4318"
+ENV OTEL_DOTNET_AUTO_LOG_DIRECTORY="/tmp/otel-dotnet-auto-logs"
+
 EXPOSE 80
                             
-ENTRYPOINT "/entrypoint.sh"
+ENTRYPOINT ["/entrypoint.sh"]
