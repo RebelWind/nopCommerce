@@ -1,0 +1,21 @@
+name: Docker Build ve Push
+
+on:
+  push:
+    branches: [ develop ]  # İstediğiniz branch'i belirtin
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Kodu kontrol et
+        uses: actions/checkout@v3
+        
+      - name: Docker imajı oluştur ve gönder
+        uses: mr-smithers-excellent/docker-build-push@v6
+        with:
+          image: vataiorg/aspsampleapp  # Docker imaj ismi
+          tags: v1, latest  # İstediğiniz etiketler
+          registry: docker.io
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
