@@ -13,12 +13,6 @@ RUN dotnet publish Nop.Web.csproj -c Release -o /app/published
 
 WORKDIR /app/published
 
-RUN curl -sSfL https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/latest/download/otel-dotnet-auto-install.sh -O && \
-    chmod +x otel-dotnet-auto-install.sh && \
-    sh ./otel-dotnet-auto-install.sh && \
-    chmod +x $HOME/.otel-dotnet-auto/instrument.sh && \
-    . $HOME/.otel-dotnet-auto/instrument.sh
-
 RUN mkdir logs bin
 
 RUN chmod 775 App_Data \
@@ -46,6 +40,12 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 RUN apk add tiff --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/main/ --allow-untrusted
 RUN apk add libgdiplus --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community/ --allow-untrusted
 RUN apk add libc-dev tzdata --no-cache
+
+RUN curl -sSfL https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/latest/download/otel-dotnet-auto-install.sh -O && \
+    chmod +x otel-dotnet-auto-install.sh && \
+    sh ./otel-dotnet-auto-install.sh && \
+    chmod +x $HOME/.otel-dotnet-auto/instrument.sh && \
+    . $HOME/.otel-dotnet-auto/instrument.sh
 
 # copy entrypoint script
 COPY ./entrypoint.sh /entrypoint.sh
