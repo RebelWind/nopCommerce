@@ -13,6 +13,12 @@ RUN dotnet publish Nop.Web.csproj -c Release -o /app/published
 
 WORKDIR /app/published
 
+RUN curl -sSfL https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/latest/download/otel-dotnet-auto-install.sh -O && \
+    chmod +x otel-dotnet-auto-install.sh && \
+    sh ./otel-dotnet-auto-install.sh && \
+    chmod +x $HOME/.otel-dotnet-auto/instrument.sh && \
+    . $HOME/.otel-dotnet-auto/instrument.sh
+
 RUN mkdir logs bin
 
 RUN chmod 775 App_Data \
@@ -27,7 +33,7 @@ RUN chmod 775 App_Data \
               wwwroot/images \
               wwwroot/images/thumbs \
               wwwroot/images/uploaded \
-              wwwroot/sitemaps
+			  wwwroot/sitemaps
 
 # create the runtime instance 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS runtime 
@@ -39,17 +45,7 @@ ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 # installs required packages
 RUN apk add tiff --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/main/ --allow-untrusted
 RUN apk add libgdiplus --no-cache --repository http://dl-3.alpinelinux.org/alpine/edge/community/ --allow-untrusted
-RUN apk add libc-dev tzdata curl bash --no-cache
-
-# OpenTelemetry kurulumu
-RUN curl -sSfL https://github.com/open-telemetry/opentelemetry-dotnet-instrumentation/releases/latest/download/otel-dotnet-auto-install.sh -o /tmp/otel-dotnet-auto-install.sh && \
-    chmod +x /tmp/otel-dotnet-auto-install.sh && \
-    bash /tmp/otel-dotnet-auto-install.sh && \
-    chmod +x $HOME/.otel-dotnet-auto/instrument.sh && \
-    mkdir -p /otel-dotnet && \
-    cp -r $HOME/.otel-dotnet-auto/* /otel-dotnet/ && \
-    chmod -R 755 /otel-dotnet/ && \
-    rm /tmp/otel-dotnet-auto-install.sh
+RUN apk add libc-dev tzdata --no-cache
 
 # copy entrypoint script
 COPY ./entrypoint.sh /entrypoint.sh
@@ -60,22 +56,6 @@ WORKDIR /app
 COPY --from=build /app/published .
 
 ENV ASPNETCORE_URLS=http://+:80
-
-# OpenTelemetry ortam değişkenleri
-ENV CORECLR_ENABLE_PROFILING="1"
-ENV CORECLR_PROFILER="{918728DD-259F-4A6A-AC2B-B85E1B658318}"
-ENV CORECLR_PROFILER_PATH="/otel-dotnet/linux-musl-x64/OpenTelemetry.AutoInstrumentation.Native.so"
-ENV DOTNET_ADDITIONAL_DEPS="/otel-dotnet/AdditionalDeps"
-ENV DOTNET_SHARED_STORE="/otel-dotnet/store"
-ENV DOTNET_STARTUP_HOOKS="/otel-dotnet/net/OpenTelemetry.AutoInstrumentation.StartupHook.dll"
-ENV OTEL_DOTNET_AUTO_HOME="/otel-dotnet"
-ENV OTEL_TRACES_EXPORTER="otlp"
-ENV OTEL_EXPORTER_OTLP_PROTOCOL="http/protobuf"
-ENV OTEL_SERVICE_NAME="nopcommerce"
-ENV OTEL_RESOURCE_ATTRIBUTES="deployment.environment=staging,service.version=1.0.0"
-ENV OTEL_EXPORTER_OTLP_ENDPOINT="http://otel-collector:4318"
-ENV OTEL_DOTNET_AUTO_LOG_DIRECTORY="/tmp/otel-dotnet-auto-logs"
-
 EXPOSE 80
                             
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT "/entrypoint.sh"
