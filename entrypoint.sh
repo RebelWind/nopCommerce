@@ -9,6 +9,7 @@ if [ -f "/root/.otel-dotnet-auto/instrument.sh" ]; then
     echo "OpenTelemetry ortam değişkenleri:"
     env | grep OTEL
     env | grep DOTNET
+    env | grep CLR
 fi
 
 exec dotnet Nop.Web.dll
